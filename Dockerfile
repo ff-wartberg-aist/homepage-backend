@@ -29,10 +29,7 @@ RUN \
   chmod 600 /github-ssh-key/id_rsa && \
   mkdir ~/.ssh && \
   ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts && \
-  # http://stackoverflow.com/a/18138352
-  echo "    IdentityFile /github-ssh-key/id_rsa" >> /etc/ssh/ssh_config && \
-
-  # clone some private repo
+  echo "IdentityFile /github-ssh-key/id_rsa" >> /etc/ssh/ssh_config && \
   mkdir /frontend/src && \
   cd /frontend/src && \
   git clone git@github.com:ff-wartberg/ff-wartberg.github.io.git /frontend/src && \
