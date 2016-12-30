@@ -23,15 +23,13 @@ RUN chmod 777 -R storage config
 
 USER www-data
 COPY site /frontend
-# COPY github-ssh-key/id_rsa /github-ssh-key/id_rsa
 COPY github-ssh-key/id_rsa /github-ssh-key/id_rsa
-# git
 RUN \
   eval $(ssh-agent) && \
   chmod 600 /github-ssh-key/id_rsa && \
   mkdir ~/.ssh && \
   ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts && \
-  # ssh-add -t 157784760 /github-ssh-key/id_rsa && \
+  # http://stackoverflow.com/a/18138352
   echo "    IdentityFile /github-ssh-key/id_rsa" >> /etc/ssh/ssh_config && \
 
   # clone some private repo
@@ -40,7 +38,5 @@ RUN \
   git clone git@github.com:ff-wartberg/ff-wartberg.github.io.git /frontend/src && \
   git config user.email "bernhard@mayr.io" && \
   git config user.name "Bernhard Mayr"
-  # && \
-  # chmod -R 755 /frontend/src
 
 VOLUME /var/www/html/storage
