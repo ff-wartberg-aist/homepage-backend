@@ -1,12 +1,24 @@
 #!/usr/local/bin/php
 <?php
-
 /* --- PARAMETERS --- */
-define("POSTS_BASE_PATH", '/frontend/src/_posts/');
-define("COCKPIT_PATH", '/var/www/html/bootstrap.php');
+define("FRONTEND_BASE_PATH", '/frontend/src');
+define("POSTS_PATH", FRONTEND_BASE_PATH.'/_posts');
+define("IMAGES_PATH", FRONTEND_BASE_PATH.'/assets');
+define("COCKPIT_BASE_PATH", '/var/www/html');
+define("COCKPIT_BOOTSTRAP_PATH", COCKPIT_BASE_PATH.'/bootstrap.php');
 /* ------------------ */
 
 date_default_timezone_set('Europe/Vienna');
+
+function assureDirectoryExists($directory) {
+    if(!file_exists($directory)) {
+        mkdir($directory, 0777, true);
+    }
+}
+
+// make sure that folders exist
+assureDirectoryExists(POSTS_PATH);
+assureDirectoryExists(IMAGES_PATH);
 
 function stripspecialchars($string)
 {
@@ -16,17 +28,25 @@ function stripspecialchars($string)
 }
 
 function addWatermark($image) {
-
+    
 }
 
-function copyImages($images) {
+function processImages($images) {
+    $names = [];
     foreach ($images as $image) {
-        addWatermark($image);
+        $imagepath = COCKPIT_BASE_PATH.substr($image['path'], 5);
+        $hash = hash_file('sha1', $imagepath);
+        $newimagename = $hash.'.'.pathinfo($imagepath, PATHINFO_EXTENSION);
+        $newimagepath = IMAGES_PATH.'/'.$newimagename;
+        copy($imagepath, $newimagepath);
+        $names[] = $newimagename;
+        addWatermark($newimagepath, 'watermark.png');
     }
+    return $names;
 }
 
 function createPost($title, $slug, $date, $category, $text, $images) {
-    copyImages($images);
+    $images = processImages($images);
     writePost($title, $slug, $date, $category, $text, $images, 'desktop');
     writePost($title, $slug, $date, $category, $text, $images, 'mobile', '.m', ['m']);
 }
@@ -47,11 +67,8 @@ function writePost($title, $slug, $date, $category, $text, $images, $layoutprefi
 }
 
 function writeFile($filename, $frontmatter, $content) {
-    if(!file_exists(POSTS_BASE_PATH)) {
-        mkdir(POSTS_BASE_PATH, 0777, true);
-    }
     file_put_contents(
-        POSTS_BASE_PATH.$filename,
+        POSTS_PATH.'/'.$filename,
         "---\r\n".implode("\r\n", array_map(
             function ($v, $k) { return sprintf("%s: %s", $k, $v); },
             $frontmatter,
@@ -60,8 +77,15 @@ function writeFile($filename, $frontmatter, $content) {
     );
 }
 
+function executeGitCommand($command) {
+    exec('cd '.FRONTEND_BASE_PATH.' && '.$command);
+}
+
+// fetch git changes
+executeGitCommand('git fetch --all');
+
 // require cockpit
-require_once(COCKPIT_PATH);
+require_once(COCKPIT_BOOTSTRAP_PATH);
 
 // load posts
 $posts = cockpit('collections')->collection('Posts')->find()->toArray();
