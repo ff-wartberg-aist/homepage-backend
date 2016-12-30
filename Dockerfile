@@ -28,6 +28,7 @@ RUN \
   eval $(ssh-agent) && \
   chmod 600 /github-ssh-key/id_rsa && \
   mkdir ~/.ssh && \
+  # Host key verification failed: http://stackoverflow.com/a/27488865
   ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts && \
   echo "IdentityFile /github-ssh-key/id_rsa" >> /etc/ssh/ssh_config && \
   mkdir /frontend/src && \
