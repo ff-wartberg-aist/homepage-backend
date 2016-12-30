@@ -1,1 +1,5 @@
+# do not commit frontend
 site/src
+
+# safely exclude github-ssh-key
+github-ssh-key/
