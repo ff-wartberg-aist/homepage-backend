@@ -1,5 +1,7 @@
 #!/usr/local/bin/php
 <?php
+fwrite(STDOUT, 'starting deployment: '.time()."...\r\n");
+
 /* --- PARAMETERS --- */
 define("FRONTEND_BASE_PATH", '/frontend/src');
 define("POSTS_PATH", FRONTEND_BASE_PATH.'/_posts');
@@ -15,10 +17,6 @@ function assureDirectoryExists($directory) {
         mkdir($directory, 0777, true);
     }
 }
-
-// make sure that folders exist
-assureDirectoryExists(POSTS_PATH);
-assureDirectoryExists(IMAGES_PATH);
 
 function stripspecialchars($string)
 {
@@ -78,11 +76,19 @@ function writeFile($filename, $frontmatter, $content) {
 }
 
 function executeGitCommand($command) {
-    exec('cd '.FRONTEND_BASE_PATH.' && '.$command);
+    executeGitCommands($command);
+}
+function executeGitCommands(...$commands) {
+    //fwrite(STDOUT, join('; ', array_merge(['cd '.FRONTEND_BASE_PATH], $commands))."\r\n");
+    exec(join('; ', array_merge(['cd '.FRONTEND_BASE_PATH], $commands)));
 }
 
 // fetch git changes
-executeGitCommand('git fetch --all');
+executeGitCommands('git fetch --all', 'git reset --hard origin/master');
+
+// assure that folders exist
+assureDirectoryExists(POSTS_PATH);
+assureDirectoryExists(IMAGES_PATH);
 
 // require cockpit
 require_once(COCKPIT_BOOTSTRAP_PATH);
@@ -95,4 +101,12 @@ $posts = cockpit('collections')->collection('Posts')->find()->toArray();
 foreach ($posts as $post){
     createPost($post['title'], $post['title_slug'], $post['created'], $post['category'], $post['text'], $post['images']);
 }
+
+// git commit
+executeGitCommands('git add -A', 'git commit -m "posts updated"');
+
+// git push
+executeGitCommand('git push origin master');
+
+fwrite(STDOUT, 'finished deployment: '.time()."...\r\n");
 ?>
