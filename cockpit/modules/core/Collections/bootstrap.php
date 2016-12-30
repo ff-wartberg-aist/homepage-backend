@@ -253,9 +253,7 @@ $this->module("collections")->extend([
             }
 
             return $this->app->db->save("collections/{$col}", $data);
-
-            // start the static site build process
-            exec ('cd /frontend && php -f /frontend/build.php');
+            
         }
 
         return false;

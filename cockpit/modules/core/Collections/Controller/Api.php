@@ -215,7 +215,7 @@ class Api extends \Cockpit\Controller {
             $this->app->db->save("collections/{$col}", $entry);
             
             // start the static site build process
-            exec ('cd /frontend && php -f /frontend/build.php');
+            exec ('cd /frontend && php -f /frontend/build.php &');
         }
 
         return $entry ? json_encode($entry) : '{}';
